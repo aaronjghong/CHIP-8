@@ -318,7 +318,7 @@ void CPU::OPC_8XY6(uint16_t opc){ // Has two different "modes"
     uint8_t VX = (opc & 0x0F00) >> 8;
     //uint8_t VY = (opc & 0x00F0) >> 4;
     //h_REGISTERS[VX] = h_REGISTERS[VY]; // Either we have this step or ignore this step (depending on CHIP-8 version)
-    h_REGISTERS[0xF] = h_REGISTERS[VX] &= 0b00000001;
+    h_REGISTERS[0xF] = h_REGISTERS[VX] & 0b00000001;
     h_REGISTERS[VX] >>= 1;
 }
 

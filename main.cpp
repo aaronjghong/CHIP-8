@@ -19,7 +19,7 @@ const int MAXOPCPERSECOND = 600;
 const int FPS = 60;
 
 
-std::string GAMEDIR_STR = "C:\\Users\\Aaron Hong\\Desktop\\chip-8\\ROMS\\UFO";
+std::string GAMEDIR_STR = "C:\\Users\\Aaron Hong\\Desktop\\chip-8\\ROMS\\test_opcode.ch8";
 char* GAMEDIR = &GAMEDIR_STR[0];
 
 bool createWindow(SDL_Surface* screenSurface){
