@@ -1,15 +1,11 @@
 #include <SDL2/SDL.h>
-// #include "SDL2/SDL_opengl.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "CPU.h"
 
+// Setting constants
 bool QUIT = false;
 
-SDL_Window *window = NULL;
-SDL_Surface *surface = NULL;
-SDL_Renderer *renderer = NULL;
-SDL_Texture *texture = NULL;
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 320;
 
@@ -18,31 +14,30 @@ CPU* CHIP8CPU = new CPU();
 const int MAXOPCPERSECOND = 600;
 const int FPS = 60;
 
+// Create SDL window
+SDL_Window *window = NULL;
 
-std::string GAMEDIR_STR = "C:\\Users\\Aaron Hong\\Desktop\\chip-8\\ROMS\\UFO";
+// To be put into external file soon
+std::string GAMEDIR_STR = "C:\\Users\\Aaron Hong\\Desktop\\chip-8\\ROMS\\test_opcode.ch8";
 char* GAMEDIR = &GAMEDIR_STR[0];
 
-bool createWindow(SDL_Surface* screenSurface){
-    window = SDL_CreateWindow( "Chip 8 Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+bool createWindow(){
+    
+    /* Creates SDL window */
+    
+    window = SDL_CreateWindow( "Chip 8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
     if( !window ){
         return false;
     }
     else{
-        //Get window surface
-        screenSurface = SDL_GetWindowSurface(window);
-
-        if( !screenSurface ){
-            return false;
-        }
-
-        //Update the surface
-        SDL_UpdateWindowSurface(window);
-
         return true;
     }
 }
 
 void getInput(SDL_Event event){
+
+    /* Gets the input from the SDL event and calls the appropriate key handler */
+
     if(event.type == SDL_KEYDOWN){
         switch(event.key.keysym.sym){
             case SDLK_1: CHIP8CPU->handleKeyPress(0); break;
@@ -86,15 +81,23 @@ void getInput(SDL_Event event){
 }
 
 void drawScreen(){
+
+    /* Draws the screen from the data in h_DISPLAY*/
+
+    // Get surface
     SDL_Surface* screenSurface = SDL_GetWindowSurface(window);
-    uint32_t pixels[64*32];
+
     for(int i = 0; i < 64; i++){
         for(int j = 0; j < 32; j++){
+            
+            // Set Rect dimensions according to window size/pixel position in 64x32 area
             SDL_Rect pixel;
             pixel.x = (SCREEN_WIDTH/64)*i;
             pixel.y = (SCREEN_HEIGHT/32)*j;
             pixel.w = (SCREEN_WIDTH/64);
             pixel.h = (SCREEN_HEIGHT/32);
+
+            // Draw white if pixel data exists, else draw black
             if(CHIP8CPU->getPixelData(i,j)){
                 SDL_FillRect(screenSurface, &pixel, SDL_MapRGB(screenSurface->format, 255, 255, 255));
             }
@@ -103,42 +106,56 @@ void drawScreen(){
             }
         }
     }
+    // Update view
     SDL_UpdateWindowSurface(window);
+    SDL_FreeSurface(screenSurface);
 }
 
 void doLoop(){
+
+    /* Init CPU and go into emulator loop */
+
+    // Reset CPU
     CHIP8CPU->reset();
+
+    // Load Game
     CHIP8CPU->load(GAMEDIR);
+
+    // Get Reference Time
     Uint32 time1 = SDL_GetTicks();
+
     SDL_Event event;
     int numOpcPerFrame = MAXOPCPERSECOND/FPS;
 
     while(!QUIT){
-        // loop
+        // Poll for input
         while(SDL_PollEvent(&event)){
             getInput(event);
             if(event.type == SDL_QUIT){
                 QUIT = true;
             }
         }
-
+        
+        // Get second time
         Uint32 time2 = SDL_GetTicks();
         if(time1 + (1000/FPS) < time2){
-            // enough time has passed, perform numOpcPerFrame opcodes
+            // 1 Frame's worth of time has passed, perform numOpcPerFrame opcodes
             for(int i = 0; i < numOpcPerFrame; i++){
                 uint16_t opc = CHIP8CPU->readNextOpcode();
                 CHIP8CPU->executeOpcode(opc);
             }
+            // Lower timers
             CHIP8CPU->lowerTimers();
+
+            // Draw Frame
             drawScreen();
+
+            // Set second time as reference time
             time1 = time2;
         }
-
     }
 }
 
-
-//The parameters in the main function cannot be omitted, or an error will be reported
 int main(int arg, char *argv[]){
 
     //Initialize SDL
@@ -149,17 +166,15 @@ int main(int arg, char *argv[]){
     }
 
     //Create window
-    if(createWindow(surface) == false){
+    if(createWindow() == false){
         return(2);
     }
     
+    // Go into main emulator loop
     doLoop();
 
     // Destroy Window
     SDL_DestroyWindow(window);
-
-    // Free Surface
-    SDL_FreeSurface(surface);
 
     //Quit SDL subsystems
     SDL_Quit();

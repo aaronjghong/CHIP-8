@@ -1,4 +1,6 @@
-//#include "CPU.h"
+// Implementation of CHIP-8 CPU
+
+#include "CPU.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -10,26 +12,42 @@ CPU::CPU(){}
 CPU::~CPU(){};
 
 void CPU::handleKeyPress(uint8_t key){
+
+    /* Sets the appropriate index of h_KEYS on */
+
     h_KEYS[key] = 1;
 }
 
 void CPU::handleKeyRelease(uint8_t key){
+
+    /* Sets the appropriate index of h_KEYS off */
+
     h_KEYS[key] = 0;
 }
 
 bool CPU::getPixelData(int x, int y){
+    
+    /* Returns a boolean value for the pixel at x,y */
+    /* true if pixel is lit, false if pixel is not lit */
+    
     return h_DISPLAY[x][y] ? true : false;
 }
 
 void CPU::reset(){
-    // Reset hardware
+    
+    /* Resets hardware and memory */
+    
     h_PC = 0x200;
     h_I = 0;
-    memset(h_REGISTERS, sizeof(h_REGISTERS), 0);
+    memset(h_REGISTERS, 0, sizeof(h_REGISTERS));
+    memset(h_KEYS, 0, sizeof(h_KEYS));
     OPC_00E0(0);
 }
 
 void CPU::load(char* dir_game){
+    
+    /* Loads the game(ROM) and font into memory(h_RAM)*/
+
     // Loading game file
     FILE *in;
     in = fopen(dir_game, "rb");
@@ -43,6 +61,9 @@ void CPU::load(char* dir_game){
 }
 
 void CPU::lowerTimers(){
+
+    /* Lowers internal timers (called at a frequency of 60hz) */
+
     if(h_DT > 0) h_DT--;
     if(h_ST > 0) h_ST--;
     if(h_ST > 0) playSound(); // Does nothing right now
@@ -52,7 +73,9 @@ void CPU::playSound(){}; // Does nothing right now
 
 // Fetch
 uint16_t CPU::readNextOpcode(){
-    // Gets and returns next opcode (16bits)
+
+    /* Gets and returns next opcode (16bits) */
+
     uint16_t opc = 0;
     opc = h_RAM[h_PC]; // Gets 8 bit first part of opcode
     opc <<= 8; // Bitshift to left by 8 bits
@@ -63,13 +86,16 @@ uint16_t CPU::readNextOpcode(){
 
 // Decode -> decodes then calls appropriate opcode function to "execute" but for public uses, "executeOpcode" makes more sense
 void CPU::executeOpcode(uint16_t opc){
+
+    /* Decodes the opcode and calls the correct opcode function */
+
     switch (opc & 0xF000){
         case 0x0000:{
             switch(opc & 0x000F){
                 case 0x0000: OPC_00E0(opc); break;
                 case 0x000E: OPC_00EE(opc); break;
-            }
-        }
+            } 
+        }; break;
         case 0x1000: OPC_1NNN(opc); break;
         case 0x2000: OPC_2NNN(opc); break;
         case 0x3000: OPC_3XKK(opc); break;
@@ -89,7 +115,7 @@ void CPU::executeOpcode(uint16_t opc){
                 case 0x0007: OPC_8XY7(opc); break;
                 case 0x000E: OPC_8XYE(opc); break;
             }
-        }
+        }; break;
         case 0x9000: OPC_9XY0(opc); break;
         case 0xA000: OPC_ANNN(opc); break;
         case 0xB000: OPC_BNNN(opc); break;
@@ -100,7 +126,7 @@ void CPU::executeOpcode(uint16_t opc){
                 case 0x000E: OPC_EX9E(opc); break;
                 case 0x0001: OPC_EXA1(opc); break;
             }
-        }
+        }; break;
         case 0xF000:{
             switch(opc & 0x000F){
                 case 0x0007: OPC_FX07(opc); break;
@@ -111,13 +137,13 @@ void CPU::executeOpcode(uint16_t opc){
                         case 0x0050: OPC_FX55(opc); break;
                         case 0x0060: OPC_FX65(opc); break;
                     }
-                }
+                }; break;
                 case 0x0008: OPC_FX18(opc); break;
                 case 0x000E: OPC_FX1E(opc); break;
                 case 0x0009: OPC_FX29(opc); break;
                 case 0x0003: OPC_FX33(opc); break;
             }
-        }
+        }; break;
         break;
         default: break; // opcode DNE or not yet implemented
     }
@@ -126,7 +152,7 @@ void CPU::executeOpcode(uint16_t opc){
 
 // Execute (Opcode functions)
 void CPU::OPC_00E0(uint16_t opc){
-    memset(h_DISPLAY, sizeof(h_DISPLAY), 0);
+    memset(h_DISPLAY, 0, sizeof(h_DISPLAY));
 }
 
 void CPU::OPC_00EE(uint16_t opc){
@@ -227,7 +253,7 @@ void CPU::OPC_8XY6(uint16_t opc){ // Has two different "modes"
     uint8_t VX = (opc & 0x0F00) >> 8;
     //uint8_t VY = (opc & 0x00F0) >> 4;
     //h_REGISTERS[VX] = h_REGISTERS[VY]; // Either we have this step or ignore this step (depending on CHIP-8 version)
-    h_REGISTERS[0xF] = h_REGISTERS[VX] &= 0x1;
+    h_REGISTERS[0xF] = h_REGISTERS[VX] & 0b00000001;
     h_REGISTERS[VX] >>= 1;
 }
 
@@ -368,16 +394,16 @@ void CPU::OPC_FX33(uint16_t opc){
 
 void CPU::OPC_FX55(uint16_t opc){
     uint8_t VX = (opc & 0x0F00) >> 8;
-    for(int i = 0; i < VX; i++){
+    for(int i = 0; i <= VX; i++){
         h_RAM[h_I + i] = h_REGISTERS[i];
     }
-    h_I += (VX + 1);
+    //h_I += (VX + 1);  // Some implementations have this line of code on
 }
 
 void CPU::OPC_FX65(uint16_t opc){
     uint8_t VX = (opc & 0x0F00) >> 8;
-    for(int i = 0; i < VX; i++){
+    for(int i = 0; i <= VX; i++){
         h_REGISTERS[i] = h_RAM[h_I + i] ;
     }
-    h_I += (VX + 1);
+    //h_I += (VX + 1);  // Some implementations have this line of code on
 }
