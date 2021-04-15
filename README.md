@@ -6,11 +6,14 @@ I've been wanting to get into emulation and to practice my programming. I figure
 
 -   "Hardware"
 -   Programming Opcode Functions
+-   Fixing Opcode bugs (MOST)
+-   Basic SDL implementation
 
 ## What's left to be done:
 
--   Integrating CPU with SDL
--   Testing
+-   Better Drawing & update rate
+-   Sound
+-   Fixing OPC_8XYE
 
 ## If you would like to make a CHIP-8 emulator too, I'd highly recommend the following resources:
 

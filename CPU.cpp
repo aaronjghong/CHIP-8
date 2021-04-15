@@ -1,9 +1,13 @@
+//#include "CPU.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
 #include <string.h>
-#include "CPU.h"
+
+CPU::CPU(){}
+
+CPU::~CPU(){};
 
 void CPU::handleKeyPress(uint8_t key){
     h_KEYS[key] = 1;
@@ -13,16 +17,19 @@ void CPU::handleKeyRelease(uint8_t key){
     h_KEYS[key] = 0;
 }
 
+bool CPU::getPixelData(int x, int y){
+    return h_DISPLAY[x][y] ? true : false;
+}
+
 void CPU::reset(){
     // Reset hardware
     h_PC = 0x200;
     h_I = 0;
     memset(h_REGISTERS, sizeof(h_REGISTERS), 0);
     OPC_00E0(0);
-    load();
 }
 
-void CPU::load(){
+void CPU::load(char* dir_game){
     // Loading game file
     FILE *in;
     in = fopen(dir_game, "rb");
@@ -44,19 +51,18 @@ void CPU::lowerTimers(){
 void CPU::playSound(){}; // Does nothing right now
 
 // Fetch
-uint8_t CPU::readNextOpcode(){
+uint16_t CPU::readNextOpcode(){
     // Gets and returns next opcode (16bits)
     uint16_t opc = 0;
     opc = h_RAM[h_PC]; // Gets 8 bit first part of opcode
     opc <<= 8; // Bitshift to left by 8 bits
-    opc |= h_RAM[h_PC]; // Use bitwise OR to get remaining 8 parts of opcode
+    opc |= h_RAM[h_PC+1]; // Use bitwise OR to get remaining 8 parts of opcode
     h_PC += 2; // Since we accessed 2x8 bits we increment PC by 2
     return opc;
 }
 
 // Decode -> decodes then calls appropriate opcode function to "execute" but for public uses, "executeOpcode" makes more sense
-void CPU::executeOpcode(){
-    uint16_t opc = readNextOpcode();
+void CPU::executeOpcode(uint16_t opc){
     switch (opc & 0xF000){
         case 0x0000:{
             switch(opc & 0x000F){
@@ -138,16 +144,12 @@ void CPU::OPC_2NNN(uint16_t opc){
 }
 
 void CPU::OPC_3XKK(uint16_t opc){
-    uint16_t opc = 0x3112;
-    h_REGISTERS[1] = 0x12;
     uint8_t VX = (opc & 0x0F00) >> 8;
     uint8_t KK = opc & 0x00FF;
     h_REGISTERS[VX] == KK ? h_PC+=2 : h_PC+=0;  
 }
 
 void CPU::OPC_4XKK(uint16_t opc){
-    uint16_t opc = 0x3112;
-    h_REGISTERS[1] = 0x12;
     uint8_t VX = (opc & 0x0F00) >> 8;
     uint8_t KK = opc & 0x00FF;
     h_REGISTERS[VX] != KK ? h_PC+=2 : h_PC+=0;  
