@@ -20,8 +20,6 @@ class CPU{
         void        handleKeyRelease( uint8_t key );
         bool        getPixelData( int x, int y);
 
-        uint8_t     h_DISPLAY[64][32];                  // Display Memory
-
     private:
                     
         void        playSound();                        // Not implemented yet
@@ -32,7 +30,7 @@ class CPU{
         uint16_t    h_I;                                // Index register
         std::vector<uint16_t> h_STACK;                  // Program Stack
         uint8_t     h_KEYS[16];                         // Keyboard
-
+        uint8_t     h_DISPLAY[64][32];                  // Display Memory
         uint8_t     h_DT = 0;                           // Delay Timer (60hz countdown)
         uint8_t     h_ST = 0;                           // Sound Timer (60hz countdown)
 

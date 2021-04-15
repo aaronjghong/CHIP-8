@@ -19,7 +19,7 @@ const int MAXOPCPERSECOND = 600;
 const int FPS = 60;
 
 
-std::string GAMEDIR_STR = "C:\\Users\\Aaron Hong\\Desktop\\chip-8\\ROMS\\test_opcode.ch8";
+std::string GAMEDIR_STR = "C:\\Users\\Aaron Hong\\Desktop\\chip-8\\ROMS\\UFO";
 char* GAMEDIR = &GAMEDIR_STR[0];
 
 bool createWindow(SDL_Surface* screenSurface){
@@ -38,18 +38,52 @@ bool createWindow(SDL_Surface* screenSurface){
         //Update the surface
         SDL_UpdateWindowSurface(window);
 
-        //Wait two seconds
-        //SDL_Delay(4000);
-
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-
-        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, SCREEN_WIDTH, SCREEN_HEIGHT);
-
         return true;
     }
 }
 
-void getInput(){}
+void getInput(SDL_Event event){
+    if(event.type == SDL_KEYDOWN){
+        switch(event.key.keysym.sym){
+            case SDLK_1: CHIP8CPU->handleKeyPress(0); break;
+            case SDLK_2: CHIP8CPU->handleKeyPress(1); break;
+            case SDLK_3: CHIP8CPU->handleKeyPress(2); break;
+            case SDLK_4: CHIP8CPU->handleKeyPress(3); break;
+            case SDLK_q: CHIP8CPU->handleKeyPress(4); break;
+            case SDLK_w: CHIP8CPU->handleKeyPress(5); break;
+            case SDLK_e: CHIP8CPU->handleKeyPress(6); break;
+            case SDLK_r: CHIP8CPU->handleKeyPress(7); break;
+            case SDLK_a: CHIP8CPU->handleKeyPress(8); break;
+            case SDLK_s: CHIP8CPU->handleKeyPress(9); break;
+            case SDLK_d: CHIP8CPU->handleKeyPress(10); break;
+            case SDLK_f: CHIP8CPU->handleKeyPress(11); break;
+            case SDLK_z: CHIP8CPU->handleKeyPress(12); break;
+            case SDLK_x: CHIP8CPU->handleKeyPress(13); break;
+            case SDLK_c: CHIP8CPU->handleKeyPress(14); break;
+            case SDLK_v: CHIP8CPU->handleKeyPress(15); break;
+        }
+    }
+    else if (event.type == SDL_KEYUP){
+        switch(event.key.keysym.sym){
+            case SDLK_1: CHIP8CPU->handleKeyRelease(0); break;
+            case SDLK_2: CHIP8CPU->handleKeyRelease(1); break;
+            case SDLK_3: CHIP8CPU->handleKeyRelease(2); break;
+            case SDLK_4: CHIP8CPU->handleKeyRelease(3); break;
+            case SDLK_q: CHIP8CPU->handleKeyRelease(4); break;
+            case SDLK_w: CHIP8CPU->handleKeyRelease(5); break;
+            case SDLK_e: CHIP8CPU->handleKeyRelease(6); break;
+            case SDLK_r: CHIP8CPU->handleKeyRelease(7); break;
+            case SDLK_a: CHIP8CPU->handleKeyRelease(8); break;
+            case SDLK_s: CHIP8CPU->handleKeyRelease(9); break;
+            case SDLK_d: CHIP8CPU->handleKeyRelease(10); break;
+            case SDLK_f: CHIP8CPU->handleKeyRelease(11); break;
+            case SDLK_z: CHIP8CPU->handleKeyRelease(12); break;
+            case SDLK_x: CHIP8CPU->handleKeyRelease(13); break;
+            case SDLK_c: CHIP8CPU->handleKeyRelease(14); break;
+            case SDLK_v: CHIP8CPU->handleKeyRelease(15); break;
+        }
+    }
+}
 
 void drawScreen(){
     SDL_Surface* screenSurface = SDL_GetWindowSurface(window);
@@ -67,27 +101,8 @@ void drawScreen(){
             else{
                 SDL_FillRect(screenSurface, &pixel, SDL_MapRGB(screenSurface->format, 0, 0, 0));
             }
-
-            /*
-            if(CHIP8CPU->getPixelData(i, j)){
-                pixels[i*32 + j] = 0xFFFFFFFF;
-            }
-            else{
-                pixels[i*32 + j] = 0x00000000;
-            }
-
-            Texture implementation
-            */
         }
     }
-    /*
-    SDL_UpdateTexture(texture, NULL, pixels, 64*4);
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
-    SDL_RenderPresent(renderer);
-
-    Texture Implementation
-    */
     SDL_UpdateWindowSurface(window);
 }
 
@@ -97,18 +112,19 @@ void doLoop(){
     Uint32 time1 = SDL_GetTicks();
     SDL_Event event;
     int numOpcPerFrame = MAXOPCPERSECOND/FPS;
+
     while(!QUIT){
         // loop
         while(SDL_PollEvent(&event)){
-            getInput();
+            getInput(event);
             if(event.type == SDL_QUIT){
-                return;
+                QUIT = true;
             }
         }
 
         Uint32 time2 = SDL_GetTicks();
-        if(time1 + 1000 < time2){
-            // 1 second has passed, perform numOpcPerFrame opcodes
+        if(time1 + (1000/FPS) < time2){
+            // enough time has passed, perform numOpcPerFrame opcodes
             for(int i = 0; i < numOpcPerFrame; i++){
                 uint16_t opc = CHIP8CPU->readNextOpcode();
                 CHIP8CPU->executeOpcode(opc);
@@ -137,21 +153,13 @@ int main(int arg, char *argv[]){
         return(2);
     }
     
-
     doLoop();
-
-    // Free Surface
-    //SDL_FreeSurface(surface);
 
     // Destroy Window
     SDL_DestroyWindow(window);
 
-    SDL_DestroyRenderer(renderer);
-
+    // Free Surface
     SDL_FreeSurface(surface);
-
-    SDL_DestroyTexture(texture);
-
 
     //Quit SDL subsystems
     SDL_Quit();

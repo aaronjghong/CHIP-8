@@ -8,12 +8,13 @@ I've been wanting to get into emulation and to practice my programming. I figure
 -   Programming Opcode Functions
 -   Fixing Opcode bugs (MOST)
 -   Basic SDL implementation
+-   Input
+-   Better Update Rate
 
 ## What's left to be done:
 
--   Better Drawing & update rate
 -   Sound
--   Fixing OPC_8XYE
+-   External .ini Reading for settings/rom
 
 ## If you would like to make a CHIP-8 emulator too, I'd highly recommend the following resources:
 
