@@ -28,10 +28,11 @@ class CPU{
         void                    handleKeyPress( uint8_t key );      // Sets the appropriate index of h_KEYS on
         void                    handleKeyRelease( uint8_t key );    // Sets the appropriate index of h_KEYS off
         bool                    getPixelData( int x, int y);        // Returns a boolean value for the pixel at x,y | true if pixel is lit, false if pixel is not lit 
+        bool                    playSound;
 
     private:
                     
-        void                    playSound();                        // Not implemented yet
+        //void                    playSound();                        // Not implemented yet
 
         /* Hardware */
         ///////////////////////////////////////////////////////////////////////

@@ -1,25 +1,98 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_audio.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "CPU.h"
+#include <Windows.h>
+#include <fstream>
+#include <winuser.h>
+#include <string>
 
 // Setting constants
 bool QUIT = false;
 
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 320;
+int settings[4];
+
+#define SCREEN_WIDTH settings[0]
+#define SCREEN_HEIGHT settings[1]
+#define MAXOPCPERSECOND settings[2]
+#define FPS settings[3]
+
+std::string ERROR_CAPTION = "";
+std::string ERROR_MESSAGE = "";
 
 CPU* CHIP8CPU = new CPU();
-
-const int MAXOPCPERSECOND = 600;
-const int FPS = 60;
 
 // Create SDL window
 SDL_Window *window = NULL;
 
 // To be put into external file soon
-std::string GAMEDIR_STR = "C:\\Users\\Aaron Hong\\Desktop\\chip-8\\ROMS\\test_opcode.ch8";
+std::string GAMEDIR_STR; // = "C:\\Users\\Aaron Hong\\Desktop\\chip-8\\ROMS\\test_opcode.ch8";
 char* GAMEDIR = &GAMEDIR_STR[0];
+
+bool getSettings(){
+
+    /* Initializes Emulator Settings from settings.txt */
+
+    // Attempt to open settings file
+    std::ifstream file("settings.txt");
+
+    if(file.is_open()){
+        // The file exists, proceed with reading the settings
+        std::string line;
+        int i = 0;
+        while(getline(file, line)){
+            // Get line, then parse for info using either // or \\ delimiters 
+            int value = 0;
+            if(line.find("\\\\") != std::string::npos){
+                // Parse for Game Directory
+                GAMEDIR_STR = line.substr(0, line.find("\\\\"));
+                GAMEDIR = &GAMEDIR_STR[0];
+
+                // Check if game directory is valid
+                FILE *checkIfOpen = fopen(GAMEDIR, "r");
+                if(!checkIfOpen){
+                    // Game directory is not valid, return false
+                    ERROR_CAPTION = "Game Not Found";
+                    ERROR_MESSAGE = "Please check if the file in the game directory exists and that all file extentions are correct";
+                    return false;
+                }
+                fclose(checkIfOpen);
+                break; // Game directory is the last setting, it is okay to break loop
+            }
+            if(line.find("//") == std::string::npos){
+                continue; // Skip instruction lines
+            }
+            try{
+                // Checking if the settings input is valid
+                if(!isdigit(line.substr(0, line.find("//"))[0])){
+                    throw i;
+                }
+                value = std::stoi(line.substr(0, line.find("//")));
+            }
+            catch(int j){
+                // Input was not valid, return false
+                ERROR_CAPTION = "Settings Error";
+                ERROR_MESSAGE = "There was an error with reading the settings at line " + std::to_string(j+3) + ".\nPlease check that all values are NUMERICAL and that the file is formatted correctly\nIf needed, please delete the settings file to reset the formatting";
+                return false;
+            }
+            settings[i] = value;
+            i++;
+        }
+    }
+    else{
+        // If the file does not exist, create settings.txt and return false
+        std::ofstream newFile("settings.txt");
+        newFile << "SETTINGS\nDO NOT DELETE ANYTHING, SIMPLY REPLACE THE VALUES NEXT TO THE DOUBLE SLASHES\n640//Screen Width\n320//Screen Height\n500//Max OPC Per Second\n60//FPS\nROMS\\GAME FILE\\\\Game Directory";
+        newFile.close();
+        ERROR_CAPTION = "First Run";
+        ERROR_MESSAGE = "A file called settings.txt has been created in the same directory as the emulator\nPlease set the desired settings and re-open the application";
+        return false;
+    }
+
+    // All settings initialized and valid, return true
+    return true;
+}
 
 bool createWindow(){
     
@@ -158,18 +231,24 @@ void doLoop(){
 
 int main(int arg, char *argv[]){
 
-    //Initialize SDL
+    // Get Settings
+    if(getSettings() == false){
+        int alert = MessageBox(NULL, ERROR_MESSAGE.c_str(), ERROR_CAPTION.c_str(), MB_ICONERROR | MB_OK);
+        return(3);
+    }
+
+    // Initialize SDL
     if( SDL_Init( SDL_INIT_EVERYTHING ) < 0 ){
         printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
 
         return(1);
     }
 
-    //Create window
+    // Create window
     if(createWindow() == false){
         return(2);
     }
-    
+
     // Go into main emulator loop
     doLoop();
 

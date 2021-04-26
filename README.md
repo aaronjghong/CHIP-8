@@ -11,11 +11,11 @@ I've been wanting to get into emulation and to practice my programming. I figure
 -   Basic SDL implementation
 -   Input
 -   Better Update Rate
+-   Reading from external settings file
 
 ## What's left to be done:
 
 -   Sound
--   External .ini Reading for settings/rom
 
 ## If you would like to make a CHIP-8 emulator too, I highly recommend the following resources:
 

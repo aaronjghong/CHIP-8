@@ -66,10 +66,10 @@ void CPU::lowerTimers(){
 
     if(h_DT > 0) h_DT--;
     if(h_ST > 0) h_ST--;
-    if(h_ST > 0) playSound(); // Does nothing right now
+    if(h_ST > 0) playSound = true; // Does nothing right now
 }
 
-void CPU::playSound(){}; // Does nothing right now
+//void CPU::playSound(){}; // Does nothing right now
 
 // Fetch
 uint16_t CPU::readNextOpcode(){
