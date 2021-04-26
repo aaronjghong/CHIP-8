@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "CPU.h"
-#include <Windows.h>
 #include <fstream>
+#include <windows.h>
 #include <winuser.h>
 #include <string>
 
@@ -25,6 +25,12 @@ CPU* CHIP8CPU = new CPU();
 
 // Create SDL window
 SDL_Window *window = NULL;
+
+// SDL Audio variables init
+SDL_AudioSpec wavSpec;
+Uint32 wavLength;
+Uint8 *wavBuffer;
+SDL_AudioDeviceID deviceId;
 
 // To be put into external file soon
 std::string GAMEDIR_STR; // = "C:\\Users\\Aaron Hong\\Desktop\\chip-8\\ROMS\\test_opcode.ch8";
@@ -223,6 +229,10 @@ void doLoop(){
             // Draw Frame
             drawScreen();
 
+            // Play/Pause Audio
+            if(CHIP8CPU->playSound) SDL_PauseAudioDevice(deviceId, 0);
+            else SDL_PauseAudioDevice(deviceId, 1);
+
             // Set second time as reference time
             time1 = time2;
         }
@@ -239,9 +249,22 @@ int main(int arg, char *argv[]){
 
     // Initialize SDL
     if( SDL_Init( SDL_INIT_EVERYTHING ) < 0 ){
-        printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
-
         return(1);
+    }
+
+    // Load sound into SDL
+    if(SDL_LoadWAV("beep2.wav", &wavSpec, &wavBuffer, &wavLength) == NULL){
+        ERROR_MESSAGE = "Error Loading Audio";
+        ERROR_CAPTION = "Error";
+        int alert = MessageBox(NULL, ERROR_MESSAGE.c_str(), ERROR_CAPTION.c_str(), MB_ICONERROR | MB_OK);
+    }
+    else{
+        deviceId = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
+        if(SDL_QueueAudio(deviceId, wavBuffer, wavLength) < 0){
+            ERROR_MESSAGE = "Error Loading Audio";
+            ERROR_CAPTION = "Error";
+            int alert = MessageBox(NULL, ERROR_MESSAGE.c_str(), ERROR_CAPTION.c_str(), MB_ICONERROR | MB_OK);
+        }
     }
 
     // Create window
